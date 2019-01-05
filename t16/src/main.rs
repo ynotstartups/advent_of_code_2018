@@ -167,8 +167,50 @@ impl<'a> Instruction<'a> {
             self.eqrr(),
         ]
         .iter()
-        .map(|r| if r == output { 1 } else { 0 })
+        .enumerate()
+        .map(|(number, r)| if r == output { 1 } else { 0 })
         .sum()
+    }
+
+    fn calc_by_opcode(&self) -> Registers {
+        let opcode = self.instruction[0];
+        assert!(opcode <= 15);
+
+        if opcode == 0 {
+            return self.banr();
+        } else if opcode == 1 {
+            return self.addr();
+        } else if opcode == 2 {
+            return self.eqri();
+        } else if opcode == 3 {
+            return self.setr();
+        } else if opcode == 4 {
+            return self.gtrr();
+        } else if opcode == 5 {
+            return self.bori();
+        } else if opcode == 6 {
+            return self.gtir();
+        } else if opcode == 7 {
+            return self.seti();
+        } else if opcode == 8 {
+            return self.borr();
+        } else if opcode == 9 {
+            return self.bani();
+        } else if opcode == 10 {
+            return self.eqir();
+        } else if opcode == 11 {
+            return self.eqrr();
+        } else if opcode == 12 {
+            return self.gtri();
+        } else if opcode == 13 {
+            return self.addi();
+        } else if opcode == 14 {
+            return self.muli();
+        } else if opcode == 15 {
+            return self.mulr();
+        }
+
+        panic!("Should never be here");
     }
 }
 
@@ -196,17 +238,63 @@ impl System {
             let after_register = System::to_register(after, 9);
 
             // println!("{:?}", before_register);
-            println!(
-                "{:?} {:?} {:?} {}",
-                before_register, instruction, after_register, blank
-            );
+            // println!(
+            //     "{:?} {:?} {:?} {}",
+            //     before_register, instruction, after_register, blank
+            // );
 
             if instruction.num_behaves_like_three_opcodes(&after_register) >= 3 {
                 number_behaves_like_three += 1;
             }
 
             number_of_instructions += 1;
-            println!("number of instruction {}", number_of_instructions);
+        }
+    }
+
+    fn check_opcode(data: &String) {
+        let mut lines = data.lines();
+        loop {
+            let before = lines.next().unwrap();
+            if before == "" {
+                return;
+            }
+
+            let instruction = lines.next().unwrap();
+            let after = lines.next().unwrap();
+            lines.next(); // a blank line
+
+            let before_register = System::to_register(before, 9);
+            let instruction =
+                Instruction::new_from_vec(System::to_i32_vec(instruction), &before_register);
+            let after_register = System::to_register(after, 9);
+
+            assert_eq!(instruction.calc_by_opcode(), after_register);
+        }
+    }
+
+    fn part2(data: &String) {
+        let mut part1_finished = false;
+        let mut lines = data.lines();
+        let mut register = Registers::new([0, 0, 0, 0]);
+        loop {
+            if !part1_finished {
+                let before = lines.next().unwrap();
+                if before == "" {
+                    part1_finished = true;
+                    lines.next();
+                } else {
+                    lines.next();
+                    lines.next();
+                    lines.next();
+                }
+            } else {
+                let instruction_str = lines.next().unwrap();
+                let instruction =
+                    Instruction::new_from_vec(System::to_i32_vec(instruction_str), &register);
+                println!("instruction {:?}", instruction);
+                register = instruction.calc_by_opcode();
+                println!("register {:?}", register);
+            }
         }
     }
 
@@ -230,10 +318,15 @@ impl System {
 
 fn main() {
     let data = fs::read_to_string("./input.txt").expect("Something went wrong reading the file");
-    println!(
-        "number of instruction behave like three opcodes {}",
-        System::part1(&data)
-    );
+    // println!(
+    //     "number of instruction behave like three opcodes {}",
+    //     System::part1(&data)
+    // );
+
+    System::check_opcode(&data);
+    println!("check opcode success");
+
+    System::part2(&data);
 }
 
 #[cfg(test)]
