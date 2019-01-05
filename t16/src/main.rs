@@ -167,50 +167,33 @@ impl<'a> Instruction<'a> {
             self.eqrr(),
         ]
         .iter()
-        .enumerate()
-        .map(|(number, r)| if r == output { 1 } else { 0 })
+        .map(|r| if r == output { 1 } else { 0 })
         .sum()
     }
 
     fn calc_by_opcode(&self) -> Registers {
         let opcode = self.instruction[0];
         assert!(opcode <= 15);
-
-        if opcode == 0 {
-            return self.banr();
-        } else if opcode == 1 {
-            return self.addr();
-        } else if opcode == 2 {
-            return self.eqri();
-        } else if opcode == 3 {
-            return self.setr();
-        } else if opcode == 4 {
-            return self.gtrr();
-        } else if opcode == 5 {
-            return self.bori();
-        } else if opcode == 6 {
-            return self.gtir();
-        } else if opcode == 7 {
-            return self.seti();
-        } else if opcode == 8 {
-            return self.borr();
-        } else if opcode == 9 {
-            return self.bani();
-        } else if opcode == 10 {
-            return self.eqir();
-        } else if opcode == 11 {
-            return self.eqrr();
-        } else if opcode == 12 {
-            return self.gtri();
-        } else if opcode == 13 {
-            return self.addi();
-        } else if opcode == 14 {
-            return self.muli();
-        } else if opcode == 15 {
-            return self.mulr();
+        // matching number to opcode is done by hand
+        match opcode {
+            0 => return self.banr(),
+            1 => return self.addr(),
+            2 => return self.eqri(),
+            3 => return self.setr(),
+            4 => return self.gtrr(),
+            5 => return self.bori(),
+            6 => return self.gtir(),
+            7 => return self.seti(),
+            8 => return self.borr(),
+            9 => return self.bani(),
+            10 => return self.eqir(),
+            11 => return self.eqrr(),
+            12 => return self.gtri(),
+            13 => return self.addi(),
+            14 => return self.muli(),
+            15 => return self.mulr(),
+            _ => panic!("should never be here"),
         }
-
-        panic!("Should never be here");
     }
 }
 
@@ -219,7 +202,6 @@ struct System {}
 impl System {
     fn part1(data: &String) -> u32 {
         let mut number_behaves_like_three = 0 as u32;
-        let mut number_of_instructions = 0;
 
         let mut lines = data.lines();
         loop {
@@ -230,7 +212,7 @@ impl System {
 
             let instruction = lines.next().unwrap();
             let after = lines.next().unwrap();
-            let blank = lines.next().unwrap();
+            lines.next();
 
             let before_register = System::to_register(before, 9);
             let instruction =
@@ -246,8 +228,6 @@ impl System {
             if instruction.num_behaves_like_three_opcodes(&after_register) >= 3 {
                 number_behaves_like_three += 1;
             }
-
-            number_of_instructions += 1;
         }
     }
 
@@ -288,12 +268,15 @@ impl System {
                     lines.next();
                 }
             } else {
-                let instruction_str = lines.next().unwrap();
-                let instruction =
-                    Instruction::new_from_vec(System::to_i32_vec(instruction_str), &register);
-                println!("instruction {:?}", instruction);
-                register = instruction.calc_by_opcode();
-                println!("register {:?}", register);
+                if let Some(instruction_str) = lines.next() {
+                    let instruction =
+                        Instruction::new_from_vec(System::to_i32_vec(instruction_str), &register);
+                    println!("instruction {:?}", instruction);
+                    register = instruction.calc_by_opcode();
+                    println!("register {:?}", register);
+                } else {
+                    return;
+                }
             }
         }
     }
@@ -318,10 +301,10 @@ impl System {
 
 fn main() {
     let data = fs::read_to_string("./input.txt").expect("Something went wrong reading the file");
-    // println!(
-    //     "number of instruction behave like three opcodes {}",
-    //     System::part1(&data)
-    // );
+    println!(
+        "number of instruction behave like three opcodes {}",
+        System::part1(&data)
+    );
 
     System::check_opcode(&data);
     println!("check opcode success");
