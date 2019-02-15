@@ -1,0 +1,8 @@
+[package]
+name = "t17"
+version = "0.1.0"
+authors = ["tigerhuang <tiger.huang@ly.st>"]
+edition = "2018"
+
+[dependencies]
+regex = "1"
